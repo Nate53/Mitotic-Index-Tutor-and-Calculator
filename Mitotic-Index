@@ -1,0 +1,369 @@
+import React, { useState } from 'react';
+import { Microscope, Calculator, BookOpen, Activity, Info, CheckCircle, AlertCircle, PieChart, TrendingUp, X } from 'lucide-react';
+
+// Types for Quiz Questions
+type Question = {
+  id: number;
+  question: string;
+  options: string[];
+  correct: number;
+  explanation: string;
+};
+
+const MitoticIndexApp = () => {
+  const [activeTab, setActiveTab] = useState<'learn' | 'calculate' | 'quiz'>('learn');
+
+  // --- Calculator State ---
+  const [cellsInMitosis, setCellsInMitosis] = useState<number | ''>('');
+  const [totalCells, setTotalCells] = useState<number | ''>('');
+  const [calculatedMI, setCalculatedMI] = useState<number | null>(null);
+
+  // --- Quiz State ---
+  const [currentQuestion, setCurrentQuestion] = useState(0);
+  const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
+  const [showExplanation, setShowExplanation] = useState(false);
+  const [score, setScore] = useState(0);
+  const [quizFinished, setQuizFinished] = useState(false);
+
+  const questions: Question[] = [
+    {
+      id: 1,
+      question: "Why is the onion root tip used to calculate mitotic index?",
+      options: [
+        "The cells are larger and easier to see than animal cells.",
+        "It contains an apical meristem where rapid growth occurs.",
+        "It is the only part of the plant that performs mitosis.",
+        "The chromosomes are always visible in interphase."
+      ],
+      correct: 1,
+      explanation: "The apical meristem is a region of active cell division (proliferation), making it ideal for finding cells in various stages of mitosis."
+    },
+    {
+      id: 2,
+      question: "A pathologist examines a tissue biopsy. A high Mitotic Index would most likely indicate:",
+      options: [
+        "The tissue is necrotic (dead).",
+        "The tissue is undergoing normal G0 resting phase.",
+        "The tissue is cancerous or growing rapidly.",
+        "The tissue has a low metabolic rate."
+      ],
+      correct: 2,
+      explanation: "A high MI indicates a large proportion of cells are dividing. In adult tissues (outside of regeneration like skin/gut), this often suggests uncontrolled division typical of tumors."
+    },
+    {
+      id: 3,
+      question: "If you count 20 cells in mitosis out of 200 total cells, what is the Mitotic Index?",
+      options: [
+        "0.10",
+        "10.0",
+        "0.01",
+        "20"
+      ],
+      correct: 0,
+      explanation: "Formula: MI = (Cells in Mitosis) / (Total Cells). 20 / 200 = 0.10. (Sometimes expressed as 10%)."
+    }
+  ];
+
+  // --- Calculator Logic ---
+  const calculateIndex = () => {
+    if (cellsInMitosis === '' || totalCells === '') return;
+    const mitosis = Number(cellsInMitosis);
+    const total = Number(totalCells);
+    
+    if (total === 0) return; // Prevent divide by zero
+
+    const result = mitosis / total;
+    setCalculatedMI(result);
+  };
+
+  const getInterpretation = (mi: number) => {
+    if (mi < 0.05) return { text: "Low Mitotic Activity", color: "text-blue-600", desc: "Typical for slow-growing tissues or adult cells in G0." };
+    if (mi < 0.20) return { text: "Moderate to High Activity", color: "text-green-600", desc: "Typical for meristems (like your onion root) or healing tissue." };
+    return { text: "Very High Activity", color: "text-red-600", desc: "Highly proliferative. In a clinical context, this requires investigation for malignancy." };
+  };
+
+  // --- Quiz Logic ---
+  const handleAnswerClick = (index: number) => {
+    if (showExplanation) return;
+    setSelectedAnswer(index);
+    setShowExplanation(true);
+    if (index === questions[currentQuestion].correct) {
+      setScore(score + 1);
+    }
+  };
+
+  const nextQuestion = () => {
+    if (currentQuestion < questions.length - 1) {
+      setCurrentQuestion(currentQuestion + 1);
+      setSelectedAnswer(null);
+      setShowExplanation(false);
+    } else {
+      setQuizFinished(true);
+    }
+  };
+
+  const resetQuiz = () => {
+    setCurrentQuestion(0);
+    setSelectedAnswer(null);
+    setShowExplanation(false);
+    setScore(0);
+    setQuizFinished(false);
+  };
+
+  return (
+    <div className="min-h-screen bg-slate-50 text-slate-800 font-sans selection:bg-emerald-100">
+      {/* Header */}
+      <header className="bg-emerald-700 text-white p-6 shadow-lg">
+        <div className="max-w-4xl mx-auto flex items-center gap-3">
+          <Microscope size={32} className="text-emerald-200" />
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight">Mitotic Index Analyzer</h1>
+            <p className="text-emerald-100 text-sm">AP & IB Biology • Cell Division Unit</p>
+          </div>
+        </div>
+      </header>
+
+      {/* Main Container */}
+      <main className="max-w-4xl mx-auto p-4 md:p-6">
+        
+        {/* Navigation Tabs */}
+        <div className="flex gap-2 mb-8 bg-white p-1 rounded-xl shadow-sm border border-slate-200 overflow-x-auto">
+          <button 
+            onClick={() => setActiveTab('learn')}
+            className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-lg font-medium transition-all ${activeTab === 'learn' ? 'bg-emerald-100 text-emerald-800 shadow-sm' : 'hover:bg-slate-50 text-slate-600'}`}
+          >
+            <BookOpen size={18} /> Context & Why
+          </button>
+          <button 
+            onClick={() => setActiveTab('calculate')}
+            className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-lg font-medium transition-all ${activeTab === 'calculate' ? 'bg-blue-100 text-blue-800 shadow-sm' : 'hover:bg-slate-50 text-slate-600'}`}
+          >
+            <Calculator size={18} /> Lab Calculator
+          </button>
+          <button 
+            onClick={() => setActiveTab('quiz')}
+            className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-lg font-medium transition-all ${activeTab === 'quiz' ? 'bg-purple-100 text-purple-800 shadow-sm' : 'hover:bg-slate-50 text-slate-600'}`}
+          >
+            <Activity size={18} /> Check Understanding
+          </button>
+        </div>
+
+        {/* --- LEARN SECTION --- */}
+        {activeTab === 'learn' && (
+          <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-300">
+            
+            {/* Intro Card */}
+            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 md:p-8">
+              <h2 className="text-2xl font-bold text-slate-800 mb-4 flex items-center gap-2">
+                <Info className="text-emerald-600" />
+                What is the Mitotic Index?
+              </h2>
+              <p className="text-lg text-slate-600 leading-relaxed mb-6">
+                The <span className="font-bold text-slate-800">Mitotic Index (MI)</span> is a quantitative measure of cell proliferation. It represents the percentage of cells in a population that are currently undergoing cell division (mitosis).
+              </p>
+              
+              <div className="grid md:grid-cols-2 gap-6">
+                <div className="bg-emerald-50 p-5 rounded-lg border border-emerald-100">
+                  <h3 className="font-bold text-emerald-800 mb-2 flex items-center gap-2">
+                    <TrendingUp size={18} /> Growth & Repair
+                  </h3>
+                  <p className="text-sm text-emerald-900">
+                    In healthy organisms, a high MI is found in areas of growth (like the <strong>apical meristem</strong> in your onion root tip lab) or tissue repair (healing a wound).
+                  </p>
+                </div>
+                <div className="bg-rose-50 p-5 rounded-lg border border-rose-100">
+                  <h3 className="font-bold text-rose-800 mb-2 flex items-center gap-2">
+                    <AlertCircle size={18} /> Disease & Cancer
+                  </h3>
+                  <p className="text-sm text-rose-900">
+                    In oncology, MI is a crucial prognostic factor. Cancer cells bypass checkpoints and divide uncontrollably. A <strong>high MI</strong> in a tumor biopsy usually indicates an aggressive cancer that is growing rapidly.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* The Formula */}
+            <div className="bg-slate-800 text-white rounded-xl shadow-lg p-6 md:p-8 text-center">
+              <h3 className="text-lg text-slate-300 uppercase tracking-wider font-semibold mb-6">The Formula</h3>
+              <div className="inline-block bg-slate-700/50 p-6 rounded-lg border border-slate-600 backdrop-blur-sm">
+                <div className="text-2xl md:text-4xl font-mono font-bold">
+                  MI = <span className="text-emerald-400">n(mitosis)</span> / <span className="text-blue-400">n(total)</span>
+                </div>
+              </div>
+              <p className="mt-6 text-slate-300 max-w-xl mx-auto">
+                Where <strong>n(mitosis)</strong> is the number of cells in P-M-A-T phases, and <strong>n(total)</strong> includes cells in Interphase + Mitosis.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* --- CALCULATE SECTION --- */}
+        {activeTab === 'calculate' && (
+          <div className="grid md:grid-cols-2 gap-6 animate-in fade-in slide-in-from-bottom-4 duration-300">
+            
+            {/* Input Panel */}
+            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+              <h2 className="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2">
+                <Calculator className="text-blue-600" />
+                Data Entry
+              </h2>
+              
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                    Number of Cells in Mitosis (P+M+A+T)
+                  </label>
+                  <input
+                    type="number"
+                    value={cellsInMitosis}
+                    onChange={(e) => setCellsInMitosis(e.target.value === '' ? '' : Number(e.target.value))}
+                    className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                    placeholder="e.g., 25"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                    Total Number of Cells Counted
+                  </label>
+                  <input
+                    type="number"
+                    value={totalCells}
+                    onChange={(e) => setTotalCells(e.target.value === '' ? '' : Number(e.target.value))}
+                    className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                    placeholder="e.g., 150"
+                  />
+                  <p className="text-xs text-slate-500 mt-1">Remember: Total = Interphase + Mitosis</p>
+                </div>
+
+                <button
+                  onClick={calculateIndex}
+                  className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg shadow-md transition-colors flex items-center justify-center gap-2 mt-4"
+                >
+                  Calculate Index
+                </button>
+              </div>
+            </div>
+
+            {/* Results Panel */}
+            <div className="space-y-6">
+              <div className={`bg-white rounded-xl shadow-sm border border-slate-200 p-6 h-full flex flex-col items-center justify-center text-center transition-all ${calculatedMI !== null ? 'ring-2 ring-blue-500/20' : ''}`}>
+                
+                {calculatedMI === null ? (
+                  <div className="text-slate-400">
+                    <PieChart size={48} className="mx-auto mb-3 opacity-20" />
+                    <p>Enter your lab data to see the results.</p>
+                  </div>
+                ) : (
+                  <>
+                    <p className="text-sm font-semibold uppercase tracking-wider text-slate-500 mb-2">Calculated Mitotic Index</p>
+                    <div className="text-5xl font-bold text-slate-800 mb-2">
+                      {calculatedMI.toFixed(3)}
+                    </div>
+                    <div className="text-lg text-slate-500 font-mono bg-slate-100 px-3 py-1 rounded-full mb-6">
+                      {(calculatedMI * 100).toFixed(1)}%
+                    </div>
+
+                    <div className="w-full bg-slate-50 rounded-lg p-4 border border-slate-100 text-left">
+                      <h4 className="font-bold text-sm text-slate-700 mb-2">Interpretation:</h4>
+                      <div className="flex items-start gap-3">
+                        <div className={`mt-1 font-bold ${getInterpretation(calculatedMI).color}`}>
+                          {getInterpretation(calculatedMI).text}
+                        </div>
+                      </div>
+                      <p className="text-sm text-slate-600 mt-1">
+                        {getInterpretation(calculatedMI).desc}
+                      </p>
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* --- QUIZ SECTION --- */}
+        {activeTab === 'quiz' && (
+          <div className="max-w-2xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-300">
+            <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+              <div className="bg-purple-600 p-4 text-white flex justify-between items-center">
+                <h2 className="font-bold flex items-center gap-2">
+                  <Activity size={20} /> Knowledge Check
+                </h2>
+                <span className="text-purple-200 text-sm">Question {currentQuestion + 1} of {questions.length}</span>
+              </div>
+
+              {!quizFinished ? (
+                <div className="p-6 md:p-8">
+                  <h3 className="text-xl font-bold text-slate-800 mb-6">
+                    {questions[currentQuestion].question}
+                  </h3>
+
+                  <div className="space-y-3">
+                    {questions[currentQuestion].options.map((option, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() => handleAnswerClick(idx)}
+                        disabled={showExplanation}
+                        className={`w-full text-left p-4 rounded-lg border transition-all flex justify-between items-center
+                          ${showExplanation && idx === questions[currentQuestion].correct 
+                            ? 'bg-emerald-50 border-emerald-500 ring-1 ring-emerald-500' 
+                            : showExplanation && idx === selectedAnswer && idx !== questions[currentQuestion].correct
+                              ? 'bg-rose-50 border-rose-500'
+                              : 'border-slate-200 hover:bg-slate-50'
+                          }
+                        `}
+                      >
+                        <span className={`font-medium ${
+                          showExplanation && idx === questions[currentQuestion].correct ? 'text-emerald-800' : 
+                          showExplanation && idx === selectedAnswer && idx !== questions[currentQuestion].correct ? 'text-rose-800' : 'text-slate-700'
+                        }`}>
+                          {option}
+                        </span>
+                        
+                        {showExplanation && idx === questions[currentQuestion].correct && <CheckCircle className="text-emerald-600" size={20} />}
+                        {showExplanation && idx === selectedAnswer && idx !== questions[currentQuestion].correct && <X className="text-rose-600" size={20} />}
+                      </button>
+                    ))}
+                  </div>
+
+                  {showExplanation && (
+                    <div className="mt-6 bg-slate-50 rounded-lg p-4 border-l-4 border-purple-500 animate-in fade-in slide-in-from-top-2">
+                      <p className="font-bold text-slate-800 mb-1">Explanation:</p>
+                      <p className="text-slate-600">{questions[currentQuestion].explanation}</p>
+                      <button 
+                        onClick={nextQuestion}
+                        className="mt-4 bg-purple-600 hover:bg-purple-700 text-white py-2 px-6 rounded-lg font-medium transition-colors ml-auto block"
+                      >
+                        {currentQuestion === questions.length - 1 ? "Finish Quiz" : "Next Question"}
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="p-10 text-center">
+                  <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-6 text-emerald-600">
+                    <CheckCircle size={40} />
+                  </div>
+                  <h3 className="text-2xl font-bold text-slate-800 mb-2">Quiz Complete!</h3>
+                  <p className="text-slate-600 mb-8">
+                    You scored {score} out of {questions.length}.
+                  </p>
+                  <button 
+                    onClick={resetQuiz}
+                    className="bg-slate-800 text-white py-2 px-6 rounded-lg font-medium hover:bg-slate-700 transition-colors"
+                  >
+                    Try Again
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+      </main>
+    </div>
+  );
+};
+
+export default MitoticIndexApp;
